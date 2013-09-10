@@ -112,7 +112,7 @@ usage(void)
 #define FEX_ACK_LEN	13
 
 static int
-fex_xfer(libusb_device_handle *hdl, void *buffer, size_t len, uint8_t dir)
+fex_xfer(usb_dev_handle *hdl, void *buffer, size_t len, uint8_t dir)
 {
 	char ackbuf[FEX_ACK_LEN];
 	int status;
@@ -175,7 +175,7 @@ fex_xfer(libusb_device_handle *hdl, void *buffer, size_t len, uint8_t dir)
 #define AW_FEL_1_READ	0x0103
 
 static int
-fex_command(libusb_device_handle *hdl, uint32_t cmd, uint32_t arg1, uint32_t arg2, uint32_t arg3, void *data, size_t len)
+fex_command(usb_dev_handle *hdl, uint32_t cmd, uint32_t arg1, uint32_t arg2, uint32_t arg3, void *data, size_t len)
 {
 	uint32_t cmdbuffer[4] = { cmd, arg1, arg2, arg3 };
 	int status = fex_xfer(hdl, cmdbuffer, 16, FEX_DIR_OUT);
@@ -310,9 +310,16 @@ fex_command(libusb_device_handle *hdl, uint32_t cmd, uint32_t arg1, uint32_t arg
 	return 0;
 }
 
+void
+fex_write_file(uint32_t addr, char *filename, size_t len) {
+    (void)addr;
+    (void)filename;
+    (void)len;
+}
+
 /* Return protocol version; or negative error code */
 static int
-aw_fel_get_version(libusb_device_handle *usb) {
+aw_fel_get_version(usb_dev_handle *usb) {
         struct aw_fel_version {
                 char signature[8];
                 uint32_t unknown_08;    /* 0x00162300 */
@@ -325,7 +332,7 @@ aw_fel_get_version(libusb_device_handle *usb) {
         } __attribute__((packed)) buf;
 	int status;
 
-	status = fex_command(usb, AW_FEL_VERSION, 0, 0, 0, buf, sizeof(buf));
+	status = fex_command(usb, AW_FEL_VERSION, 0, 0, 0, &buf, sizeof(buf));
 	if (status < 0)
 		return status;
 
@@ -335,7 +342,7 @@ aw_fel_get_version(libusb_device_handle *usb) {
 int
 main(int argc, char *argv[])
 {
-	libusb_device_handle *usb;
+	usb_dev_handle *usb;
 
 	int open_status;
 	uint8_t *buf;
@@ -389,38 +396,38 @@ main(int argc, char *argv[])
 		printf("alt_stat=%d\n",open_status);
 
 	/* Check device mode (FEX protocol version) */
-	if (aw_get_version(usb) == 1) {
+	if (aw_fel_get_version(usb) == 1) {
 		/* We're version 1, so lets load the v2 protocol */
 		char buffer[0x100];
-		aw_get_version(usb);
-		if (fex_command(usb, AW_FEL_1_READ, 0x7e00, sizeof(buffer), buffer, sizeof(buffer)) < 0 ||
+		aw_fel_get_version(usb);
+		if (fex_command(usb, AW_FEL_1_READ, 0x7e00, sizeof(buffer), 0, buffer, sizeof(buffer)) < 0 ||
 		    *(uint32_t*)buffer == 0) {
 			fprintf(stderr, "Error: device previously failed to switch; please power off/on device\n");
 			exit(EXIT_FAILURE);
 		}
-		aw_get_version(usb);
+		aw_fel_get_version(usb);
 		*(uint32_t*)buffer = 0;
-		if (fex_command(usb, AW_FEL_1_WRITE, 0x7e00, sizeof(buffer), buffer, sizeof(buffer)) < 0) {
+		if (fex_command(usb, AW_FEL_1_WRITE, 0x7e00, sizeof(buffer), 0, buffer, sizeof(buffer)) < 0) {
 			fprintf(stderr, "Error: unable to write command to prepare to switch\n");
 			exit(EXIT_FAILURE);
 		}
 
-		fex_command(usb, AW_FEL_1_WRITE, 0x7010, 180, buffer, 180);
+		fex_command(usb, AW_FEL_1_WRITE, 0x7010, 180, 0, buffer, 180);
 
 		memset(buffer, 0, 16);
-		fex_command(usb, AW_FEL_1_WRITE, 0x7210, 16, buffer, 16);
+		fex_command(usb, AW_FEL_1_WRITE, 0x7210, 16, 0, buffer, 16);
 
 		fex_write_file(0x7220, "fex_1_1.fex", 0xae0);
-		fex_command(usb, AW_FEL_1_EXEC, 0x7220, 0, NULL, 0);
+		fex_command(usb, AW_FEL_1_EXEC, 0x7220, 0, 0, NULL, 0);
 
-		fex_command(usb, AW_FEL_1_READ, 0x7210, 16, buffer, 16);
+		fex_command(usb, AW_FEL_1_READ, 0x7210, 16, 0, buffer, 16);
 		if (memcmp(buffer, "DRAM\x01", 5) != 0) {
 			fprintf(stderr, "Error: could not find DRAM magic!\n");
 			exit(EXIT_FAILURE);
 		}
 
 		fex_write_file(0x2000, "fes_1-2.fex", 0);
-		fex_command(usb, AWL_FEL_1_EXEC, 0x2000, 0, NULL, 0);
+		fex_command(usb, AW_FEL_1_EXEC, 0x2000, 0, 0, NULL, 0);
 	}
 
 	close(img);
