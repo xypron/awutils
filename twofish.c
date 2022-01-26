@@ -402,7 +402,7 @@ u4byte mds_rem(u4byte p0, u4byte p1)
 /* initialise the key schedule from the user supplied key   */
 
 u4byte *tf_init(const u4byte in_key[], const u4byte key_len)
-{   u4byte  i, a, b, me_key[4], mo_key[4];
+{   u4byte  i, a, b;
 
 #ifdef Q_TABLES
     if(!qt_gen)
@@ -422,8 +422,8 @@ u4byte *tf_init(const u4byte in_key[], const u4byte key_len)
 
     for(i = 0; i < k_len; ++i)
     {
-        a = in_key[i + i];     me_key[i] = a;
-        b = in_key[i + i + 1]; mo_key[i] = b;
+        a = in_key[i + i];
+        b = in_key[i + i + 1];
         s_key[k_len - i - 1] = mds_rem(a, b);
     }
     //printf("s_key: %08x %08x %08x %08x\n", s_key[0], s_key[1], s_key[2], s_key[3]);
