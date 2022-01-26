@@ -223,10 +223,12 @@ u4byte h_fun(const u4byte x, const u4byte key[])
             b1 = q(0, b1) ^ byte(key[3],1);
             b2 = q(0, b2) ^ byte(key[3],2);
             b3 = q(1, b3) ^ byte(key[3],3);
+	    /* FALLTHRU */
     case 3: b0 = q(1, b0) ^ byte(key[2],0);
             b1 = q(1, b1) ^ byte(key[2],1);
             b2 = q(0, b2) ^ byte(key[2],2);
             b3 = q(0, b3) ^ byte(key[2],3);
+	    /* FALLTHRU */
     case 2: b0 = q(0,q(0,b0) ^ byte(key[1],0)) ^ byte(key[0],0);
             b1 = q(0,q(1,b1) ^ byte(key[1],1)) ^ byte(key[0],1);
             b2 = q(1,q(0,b2) ^ byte(key[1],2)) ^ byte(key[0],2);
