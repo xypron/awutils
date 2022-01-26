@@ -143,13 +143,13 @@ fex_xfer(usb_dev_handle *hdl, void *buffer, size_t len, uint8_t dir)
 
 	if (dir == FEX_DIR_IN) {
 		status = usb_bulk_read(hdl, FEX_EP_IN, buffer, len, FEX_TIMEOUT);
-		if (status != len) {
+		if (status < 0 || (size_t)status != len) {
 			if (verbose) printf("%s: data read failed (%d/%lu)!\n", __func__, status, len);
 			return (status < 0) ? status : -EIO;
 		}
 	} else if (dir == FEX_DIR_OUT) {
 		status = usb_bulk_write(hdl, FEX_EP_OUT, buffer, len, FEX_TIMEOUT);
-		if (status != len) {
+		if (status < 0 || (size_t)status != len) {
 			if (verbose) printf("%s: data write failed (%d/%lu)!\n", __func__, status, len);
 			return (status < 0) ? status : -EIO;
 		}
