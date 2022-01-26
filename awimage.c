@@ -105,7 +105,7 @@ crypto_init(void)
 
 static void *rc6_decrypt_inplace(void *p, size_t len, rc6_ctx_t *ctx)
 {
-    int i;
+    size_t i;
 
     /* If encryption is disabled, we've got nothing to do */
     if (!flag_encryption_enabled)
@@ -121,7 +121,7 @@ static void *rc6_decrypt_inplace(void *p, size_t len, rc6_ctx_t *ctx)
 
 static void *rc6_encrypt_inplace(void *p, size_t len, rc6_ctx_t *ctx)
 {
-    int i;
+    size_t i;
 
     /* If encryption is disabled, we've got nothing to do */
     if (!flag_encryption_enabled)
@@ -137,7 +137,7 @@ static void *rc6_encrypt_inplace(void *p, size_t len, rc6_ctx_t *ctx)
 
 static void *tf_decrypt_inplace(void *p, size_t len)
 {
-    int i;
+    size_t i;
 
     /* If encryption is disabled, we've got nothing to do */
     if (!flag_encryption_enabled)
@@ -460,12 +460,13 @@ decrypt_image(const char *infn, const char *outfn)
 static int
 unpack_image(const char *infn, const char *outdn)
 {
-    int num_files, pid, vid, hardware_id, firmware_id;
+    int pid, vid, hardware_id, firmware_id;
     FILE *ifp, *lfp = NULL, *ofp, *cfp;
     struct imagewty_header *header;
     void *image, *curr;
     long imagesize;
-    int i;
+    uint32_t num_files;
+    size_t i;
 
     ifp = fopen(infn, "rb");
     if (ifp == NULL) {
