@@ -368,7 +368,7 @@ pack_image(const char *indn, const char *outfn)
 static int
 decrypt_image(const char *infn, const char *outfn)
 {
-    int num_files, pid, vid, hardware_id, firmware_id;
+    int num_files;
     struct imagewty_header *header;
     void *image, *curr;
     FILE *ifp, *ofp;
@@ -412,16 +412,8 @@ decrypt_image(const char *infn, const char *outfn)
     /* Check version of header and setup our local state */
     if (header->header_version == 0x0300) {
         num_files = header->v3.num_files;
-        hardware_id = header->v3.hardware_id;
-        firmware_id = header->v3.firmware_id;
-        pid = header->v3.pid;
-        vid = header->v3.vid;
     } else /*if (header->header_version == 0x0100)*/ {
         num_files = header->v1.num_files;
-        hardware_id = header->v1.hardware_id;
-        firmware_id = header->v1.firmware_id;
-        pid = header->v1.pid;
-        vid = header->v1.vid;
     }
 
     /* Decrypt file headers */
